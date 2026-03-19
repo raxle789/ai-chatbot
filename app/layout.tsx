@@ -1,8 +1,13 @@
 import { Geist_Mono, Inter } from "next/font/google"
-
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@/lib/utils"
+import type { Metadata } from "next"
+
+export const metadata: Metadata = {
+  title: "AI Chatbot",
+  description: "A simple AI chatbot built with Next.js and Vercel AI SDK.",
+}
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
 
