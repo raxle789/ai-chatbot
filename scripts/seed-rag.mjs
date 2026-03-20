@@ -6,9 +6,9 @@ import { documents } from "../docs/rag_dataset.js"
 async function runIngest() {
   console.log("Mulai proses embedding...")
 
-  // 1. Inisialisasi model embedding nomic-embed-text via Ollama
+  // 1. Inisialisasi model embedding via Ollama
   const embeddings = new OllamaEmbeddings({
-    model: "nomic-embed-text",
+    model: "bge-m3",
     baseUrl: "http://localhost:11434", // Sesuaikan jika port Ollama berbeda
   })
 

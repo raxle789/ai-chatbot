@@ -10,7 +10,6 @@ import { Chroma } from "@langchain/community/vectorstores/chroma"
 
 export async function POST(req: Request) {
   const { messages }: { messages: UIMessage[] | any } = await req.json()
-  // const userQuestion = messages[messages.length - 1]?.content
   const lastMessage = messages[messages.length - 1]
   const userQuestion =
     typeof lastMessage?.content === "string"
@@ -22,15 +21,14 @@ export async function POST(req: Request) {
   // Ekstrak esensi pertanyaan untuk dicarikan ke Chroma
   const { text: searchKeyword } = await generateText({
     model: groq(llmOptions[1]),
-    system: `Anda adalah mesin pencari. Ubah pertanyaan user menjadi bentuk kata kunci pencarian yang sangat ringkas untuk mencari produk di database. Abaikan sapaan atau kata taya. Contoh: "apakah kamu tau harga laptop axiom 15?" -> "Laptop Axiom 15". "Berapa stok headphone studio x7?" -> "Headphone Studio X7 stok". HANYA output kata kunci, jangan tambah kata lain.`,
+    system: `Anda adalah mesin pencari. Ubah pertanyaan user menjadi bentuk kata kunci pencarian yang sangat ringkas untuk mencari produk di database. Abaikan sapaan atau kata tanya. Contoh: "apakah kamu tau harga laptop axiom 15?" -> "Laptop Axiom 15". "Berapa stok headphone studio x7?" -> "Headphone Studio X7 stok". HANYA output kata kunci, jangan tambah kata lain.`,
     prompt: userQuestion,
   })
 
-  console.log(`🔑 Keyword pencarian Chroma DB: ${searchKeyword}`)
-
   // 1. Embedding pertanyaan user pakai Ollama
   const embeddings = new OllamaEmbeddings({
-    model: "nomic-embed-text",
+    // model: "nomic-embed-text",
+    model: "bge-m3",
     baseUrl: "http://localhost:11434",
   })
 
@@ -42,7 +40,7 @@ export async function POST(req: Request) {
 
   // 3. Cari dokumen relevan
   const retriever = vectorStore.asRetriever(6)
-  const relevantDocs = await retriever.invoke(userQuestion)
+  const relevantDocs = await retriever.invoke(searchKeyword)
   // const context = relevantDocs.map((doc) => doc.pageContent).join("\n\n")
   const context = relevantDocs
     .map((doc) => {
@@ -58,6 +56,8 @@ export async function POST(req: Request) {
       return docContext
     })
     .join("\n\n---\n\n")
+
+  console.log(`🔑 Keyword pencarian Chroma DB: ${searchKeyword}`)
   console.log({ userQuestion, context })
 
   // 4. Stream jawaban dari Groq dengan context RAG
@@ -68,8 +68,6 @@ export async function POST(req: Request) {
     
     Context:
     ${context}`,
-    // system:
-    //   "Anda adalah asisten AI yang membantu. Jawab dengan jelas dan ringkas.",
     messages: await convertToModelMessages(messages),
   })
 

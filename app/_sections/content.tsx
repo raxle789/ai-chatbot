@@ -1,10 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import { useChat } from "@ai-sdk/react"
 import { Button } from "@/components/ui/button"
 
 export default function Content() {
+  const bottomRef = useRef<HTMLDivElement>(null)
   const [input, setInput] = useState("")
   const { messages, sendMessage, status, stop, error } = useChat()
   const isLoading = status === "submitted" || status === "streaming"
@@ -20,6 +21,10 @@ export default function Content() {
   useEffect(() => {
     if (error) console.warn("Chat error:", error)
   }, [error])
+
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [messages])
 
   return (
     <main className="mx-auto flex w-2xl flex-col gap-4 p-6">
@@ -57,6 +62,8 @@ export default function Content() {
             AI sedang mengetik...
           </p>
         )}
+
+        <div ref={bottomRef} />
       </div>
 
       {/* Input form */}
