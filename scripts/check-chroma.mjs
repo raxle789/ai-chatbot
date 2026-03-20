@@ -7,8 +7,10 @@ const client = new ChromaClient({ path: "http://localhost:8000" })
 const collections = await client.listCollections()
 console.log("Collections:", collections)
 
+const collectionNames = ["ecommerce_rag", "design_books"]
+
 // Lihat isi collection
-const collection = await client.getCollection({ name: "ecommerce_rag" })
+const collection = await client.getCollection({ name: collectionNames[1] })
 const data = await collection.get()
 
 console.log("Total documents:", data.ids.length)

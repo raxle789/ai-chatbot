@@ -3,6 +3,8 @@
 import { useEffect, useState, useRef } from "react"
 import { useChat } from "@ai-sdk/react"
 import { Button } from "@/components/ui/button"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 
 export default function Content() {
   const bottomRef = useRef<HTMLDivElement>(null)
@@ -44,14 +46,14 @@ export default function Content() {
             className={
               message.role === "user"
                 ? "ml-auto max-w-[80%] rounded-2xl bg-primary px-4 py-2 text-sm text-primary-foreground"
-                : "mr-auto max-w-[80%] rounded-2xl bg-muted px-4 py-2 text-sm"
+                : "mr-auto max-w-[80%] rounded-2xl bg-muted px-4 py-2 text-sm whitespace-pre-wrap"
             }
           >
             {message.parts.map((part, i) =>
               part.type === "text" ? (
-                <p key={i} className="whitespace-pre-wrap">
+                <ReactMarkdown key={i} remarkPlugins={[remarkGfm]}>
                   {part.text}
-                </p>
+                </ReactMarkdown>
               ) : null
             )}
           </div>

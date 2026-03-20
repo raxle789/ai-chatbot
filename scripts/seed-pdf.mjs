@@ -1,12 +1,12 @@
 import { PDFLoader } from "@langchain/community/document_loaders/fs/pdf"
-import { RecursiveCharacterTextSplitter } from "langchain/text_splitter"
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters"
 import { OllamaEmbeddings } from "@langchain/ollama"
 import { Chroma } from "@langchain/community/vectorstores/chroma"
 
-async function ingestSOP() {
-  console.log("1. Membaca file PDF SOP Perusahaan...")
+async function ingestPDF() {
+  console.log("1. Membaca file PDF...")
   // Load file PDF dari folder docs
-  const loader = new PDFLoader("../docs/sop_perusahaan.pdf")
+  const loader = new PDFLoader("./docs/refactoring_ui_compress.pdf")
   const rawDocs = await loader.load()
 
   console.log("2. Memotong dokumen menjadi paragraf kecil (Chunking)...")
@@ -16,8 +16,22 @@ async function ingestSOP() {
     chunkOverlap: 200, // Sisakan 200 karakter overlap agar konteks antarpotongan tidak terputus
   })
   const chunkedDocs = await textSplitter.splitDocuments(rawDocs)
+  const enrichedDocs = chunkedDocs.map((doc) => {
+    // PDFLoader biasanya menyimpan info di doc.metadata.loc.pageNumber
+    const pageNum = doc.metadata?.loc?.pageNumber || "Tidak diketahui"
+    const cleanMetadata = {
+      source: doc.metadata.source, // Nama/path asal file, ini dimaafkan karena String
+      page_number: pageNum, // Nomor halaman (Number)
+    }
 
-  console.log(`Berhasil dipotong menjadi ${chunkedDocs.length} bagian.`)
+    return {
+      // Sisipkan info ke bagian paling atas dari setiap chunk
+      pageContent: `[Sumber Dokumen: Halaman ${pageNum}]\n${doc.pageContent}`,
+      metadata: cleanMetadata,
+    }
+  })
+
+  console.log(`Berhasil dipotong menjadi ${enrichedDocs.length} bagian.`)
 
   console.log("3. Memasukkan ke Chroma DB...")
   const embeddings = new OllamaEmbeddings({
@@ -25,12 +39,12 @@ async function ingestSOP() {
     baseUrl: "http://localhost:11434",
   })
 
-  await Chroma.fromDocuments(chunkedDocs, embeddings, {
-    collectionName: "ecommerce_rag", // Masukkan ke koleksi yang sama atau koleksi baru
+  await Chroma.fromDocuments(enrichedDocs, embeddings, {
+    collectionName: "design_books", // Masukkan ke koleksi yang sama atau koleksi baru
     url: "http://localhost:8000",
   })
 
-  console.log("✅ SOP Perusahaan berhasil ditambahkan ke otak AI!")
+  console.log("✅ Dokumen berhasil ditambahkan ke otak AI!")
 }
 
-ingestSOP().catch(console.error)
+ingestPDF().catch(console.error)
