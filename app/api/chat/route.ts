@@ -8,7 +8,12 @@ import {
 import { OllamaEmbeddings } from "@langchain/ollama"
 import { Chroma } from "@langchain/community/vectorstores/chroma"
 
-const llmOptions = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"]
+const llmOptions = [
+  "llama-3.3-70b-versatile",
+  "llama-3.1-8b-instant",
+  "groq/compound",
+  "openai/gpt-oss-120b",
+]
 const embeddingModel = ["bge-m3", "nomic-embed-text"]
 const collectionName = ["ecommerce_rag", "design_books"]
 
@@ -30,13 +35,13 @@ export async function POST(req: Request) {
   // 1. Embedding pertanyaan user pakai Ollama
   const embeddings = new OllamaEmbeddings({
     model: embeddingModel[0],
-    baseUrl: "http://localhost:11434",
+    baseUrl: process.env.OLLAMA_URL || "http://localhost:11434",
   })
 
   // 2. Load ChromaDB collection
   const vectorStore = await Chroma.fromExistingCollection(embeddings, {
     collectionName: collectionName[1],
-    url: "http://localhost:8000",
+    url: process.env.CHROMA_URL || "http://localhost:8000",
   })
 
   // 3. Cari dokumen relevan
@@ -74,11 +79,16 @@ export async function POST(req: Request) {
     ${context}`,
   ]
 
+  const cleanMessages = messages.map((msg: any) => ({
+    ...msg,
+    reasoning: undefined,
+  }))
+
   // 4. Stream jawaban dari Groq dengan context RAG
   const result = streamText({
-    model: groq(llmOptions[0]),
-    system: promptOptions[1],
-    messages: await convertToModelMessages(messages),
+    model: groq(llmOptions[3]),
+    system: promptOptions[0],
+    messages: await convertToModelMessages(cleanMessages),
   })
 
   return result.toUIMessageStreamResponse()

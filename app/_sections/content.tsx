@@ -29,7 +29,7 @@ export default function Content() {
   }, [messages])
 
   return (
-    <main className="mx-auto flex w-2xl flex-col gap-4 p-6">
+    <main className="mx-auto flex w-3xl flex-col gap-4 p-6">
       <h1 className="text-xl font-semibold">AI Chatbot</h1>
 
       {/* Area pesan */}
