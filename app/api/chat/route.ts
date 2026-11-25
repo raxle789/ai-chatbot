@@ -86,7 +86,7 @@ export async function POST(req: Request) {
 
   // 4. Stream jawaban dari Groq dengan context RAG
   const result = streamText({
-    model: groq(llmOptions[3]),
+    model: groq(llmOptions[0]),
     system: promptOptions[0],
     messages: await convertToModelMessages(cleanMessages),
   })
